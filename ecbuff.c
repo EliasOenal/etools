@@ -51,6 +51,8 @@
 /* TODO: Implement C11 barrier */
 #if defined(__GNUC__) || defined(__clang__)
 #define FULL_MEMORY_BARRIER() __sync_synchronize()
+#elif defined(__ARMCC_VERSION)
+#define FULL_MEMORY_BARRIER() __dmb(15)
 #else
 #error ECB_THREAD_BARRIER does not support this compiler!
 #endif /* Compiler support */
