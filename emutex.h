@@ -7,10 +7,10 @@
  * emutex_lock implements a spin lock and blocks until the mutex is aquired.
  *
  * WARNING: As of GCC 8.2.0 the code generated for ARMv6-m (e.g. Cortex-M0)
- * 			does not look safe, since the architecture doesn't support the
- * 			LDREX/STREX instructions and GCC doesn't generate code to protect
- * 			against interrupts. Though ARMv7-m (e.g. Cortex-M3 and onwards)
- * 			has been tested and is fully supported.
+ *          does not look safe, since the architecture doesn't support the
+ *          LDREX/STREX instructions and GCC doesn't generate code to protect
+ *          against interrupts. Though ARMv7-m (e.g. Cortex-M3 and onwards)
+ *          has been tested and is fully supported.
  * 
  * Written by Elias Oenal <emutex@eliasoenal.com>, released as public domain.
  */
