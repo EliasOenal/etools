@@ -1,4 +1,8 @@
-/* Tests for ecbuff */
+/* 
+ * Tests for ecbuff
+ * 
+ * Written by Elias Oenal <ecbuff@eliasoenal.com>, released as public domain.
+ */
 
 #include "ecbuff.h"
 #include <stdint.h>
