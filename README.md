@@ -1,7 +1,7 @@
 ### What is etools about?
 The etools are a handy collection of algorithms written in C.
-They intend to be inclusive (but not limited) to the smallest of embedded systems and aim to comply with standard C99 whenever possible.
-Providing essential building blocks, code quality is a major concern.
+They intend to be inclusive (but not limited) to the smallest of embedded systems and aim to comply with standard C whenever possible.
+Providing essential building blocks, code quality is of major concern.
 All of this is released into the public domain, in order to aid the use in free and commercial applications.
 
 #### efilter
@@ -18,3 +18,8 @@ direct peripheral or DMA access. For the most part ecbuff is written in plain C9
 with the notable exception of using memory barriers if selected. Alternatively multi-threading
 can on some architectures be enabled using the volatile keyword, though this leaves the scope of the C standard.
 It comes with a suite of tests and has been used in several commercial products.
+
+#### emutex
+It implements a basic mutex that allows for blocking (spinlock) and non-blocking operation.
+Yield functionality, if available, (e.g. of an RTOS) can be integrated easily.
+Since emutex only relies on standard C (2011) it is fully portable and works on all supported platforms.
