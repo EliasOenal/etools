@@ -18,6 +18,11 @@
 #ifndef EMUTEX_H
 #define EMUTEX_H
 
+/* EM_ASSERT
+ * Enable runtime checks
+ */
+//#define EM_ASSERT
+
 #include <stdbool.h>
 #include <stdatomic.h>
 typedef atomic_flag emutex;

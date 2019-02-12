@@ -6,8 +6,16 @@
 
 #include "emutex.h"
 
+#if defined(EM_ASSERT)
+#include <assert.h>
+#else
+#define NDEBUG
+#define assert(x)
+#endif
+
 void emutex_init(emutex* const restrict mutex)
 {
+	assert(mutex);
 	emutex_unlock(mutex);
 	return;
 }
@@ -21,11 +29,13 @@ static inline bool emutex_trylock_private(emutex* const restrict mutex)
 
 bool emutex_trylock(emutex* const restrict mutex)
 {
+	assert(mutex);
 	return emutex_trylock_private(mutex);
 }
 
 void emutex_lock(emutex* const restrict mutex)
 {
+	assert(mutex);
 	while(!emutex_trylock_private(mutex))
 	{
 		// You may want to yield here
@@ -35,6 +45,7 @@ void emutex_lock(emutex* const restrict mutex)
 
 void emutex_unlock(emutex* const restrict mutex)
 {
+	assert(mutex);
 	atomic_flag_clear(mutex);
 	return;
 }
