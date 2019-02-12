@@ -13,11 +13,12 @@
 
 /* ECB_ASSERT
  * Enable runtime checks
- *
- * ECB_ELEM_ALIGN
- * Additional assertions to check whether buffer meets alignment of ECB_ELEM_ALIGN.
  */
 #define ECB_ASSERT
+
+/* ECB_ELEM_ALIGN
+ * Additional assertions to check whether buffer meets alignment of ECB_ELEM_ALIGN.
+ */
 //#define ECB_ELEM_ALIGN 4
 
 
