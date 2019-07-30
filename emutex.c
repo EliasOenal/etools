@@ -22,7 +22,7 @@ void emutex_init(emutex* const restrict mutex)
 
 static inline bool emutex_trylock_private(emutex* const restrict mutex)
 {
-	if(atomic_flag_test_and_set(mutex))
+	if(atomic_flag_test_and_set_explicit(mutex, memory_order_acquire))
 		return false;
 	return true;
 }
@@ -46,6 +46,6 @@ void emutex_lock(emutex* const restrict mutex)
 void emutex_unlock(emutex* const restrict mutex)
 {
 	assert(mutex);
-	atomic_flag_clear(mutex);
+	atomic_flag_clear_explicit(mutex, memory_order_release);
 	return;
 }
