@@ -23,3 +23,4 @@ It comes with a suite of tests and has been used in several commercial products.
 It implements a basic mutex that allows for blocking (spinlock) and non-blocking operation.
 Yield functionality, if available, (e.g. of an RTOS) can be integrated easily.
 Since emutex only relies on standard C (2011) it is fully portable and works on all supported platforms.
+![emutex_sync](/assets/emutex.png)
