@@ -48,16 +48,26 @@
 #endif
 
 #if defined(ECB_THREAD_BARRIER)
-/* TODO: Implement C11 barrier */
+#if (__STDC_VERSION__ >= 201112L) /* C11 */
+#include <stdatomic.h>
+#define FENCE_ACQUIRE() atomic_thread_fence(memory_order_acquire)
+#define FENCE_RELEASE() atomic_thread_fence(memory_order_release)
+#define FENCE_FULL() atomic_thread_fence(memory_order_acq_rel)
+#else /* C11 */
 #if defined(__GNUC__) || defined(__clang__)
-#define FULL_MEMORY_BARRIER() __sync_synchronize()
+#define FENCE_FULL() __sync_synchronize()
 #elif defined(__ARMCC_VERSION)
-#define FULL_MEMORY_BARRIER() __dmb(15)
+#define FENCE_FULL() __dmb(15)
 #else
 #error ECB_THREAD_BARRIER does not support this compiler!
 #endif /* Compiler support */
+#define FENCE_ACQUIRE() FENCE_FULL()
+#define FENCE_RELEASE() FENCE_FULL()
+#endif /* C11 */
 #else /* ECB_THREAD_SINGLE or ECB_THREAD_VOLATILE */
-#define FULL_MEMORY_BARRIER()
+#define FENCE_FULL()
+#define FENCE_ACQUIRE() FENCE_FULL()
+#define FENCE_RELEASE() FENCE_FULL()
 #endif /* ECB_THREAD_BARRIER */
 
 #define ECB_MODULUS(x, y) (x % y)
@@ -84,7 +94,6 @@ void ecbuff_init(ecbuff* const restrict rb, const ECB_UINT_T total_size, const E
     rb->element_size = element_size;
     rb->rp = 0;
     rb->wp = 0;
-    FULL_MEMORY_BARRIER();
 }
 
 static inline bool ecbuff_is_full_private(const ECB_UINT_T total_size, const ECB_UINT_T element_size,
@@ -98,7 +107,6 @@ static inline bool ecbuff_is_full_private(const ECB_UINT_T total_size, const ECB
 bool ecbuff_is_full(const ecbuff* const restrict rb)
 {
     assert(rb);
-    FULL_MEMORY_BARRIER();
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T rp = rb->rp;
@@ -115,7 +123,6 @@ static inline bool ecbuff_is_empty_private(const ECB_UINT_T rp, const ECB_UINT_T
 bool ecbuff_is_empty(const ecbuff* const restrict rb)
 {
     assert(rb);
-    FULL_MEMORY_BARRIER();
     ECB_UINT_T rp = rb->rp;
     ECB_UINT_T wp = rb->wp;
     return ecbuff_is_empty_private(rp, wp);
@@ -141,7 +148,6 @@ ECB_VOID_BOOL_T ecbuff_write(ecbuff* const restrict rb, const void* const restri
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T wp = rb->wp;
 #if defined(ECB_WRITE_DROP) || defined(ECB_WRITE_OVERWRITE) || defined(ECB_ASSERT)
-    FULL_MEMORY_BARRIER();
     ECB_UINT_T rp = rb->rp;
 #endif
 
@@ -157,9 +163,9 @@ ECB_VOID_BOOL_T ecbuff_write(ecbuff* const restrict rb, const void* const restri
 #if !defined(ECB_WRITE_OVERWRITE)
     assert(!ecbuff_is_full_private(total_size, element_size, rp, wp));
 #endif /* ECB_WRITE_OVERWRITE */
-
+    FENCE_ACQUIRE();
     ECB_MEMCPY(&rb->elems[wp], element, element_size);
-    FULL_MEMORY_BARRIER();
+    FENCE_RELEASE();
     wp = ECB_MODULUS((wp + element_size), total_size);
     rb->wp = wp;
 
@@ -173,7 +179,6 @@ ECB_VOID_BOOL_T ecbuff_write(ecbuff* const restrict rb, const void* const restri
 #endif /* ECB_EXTRA_CHECKS */
     }
 #endif /* ECB_WRITE_OVERWRITE */
-    FULL_MEMORY_BARRIER();
 #if defined(ECB_EXTRA_CHECKS)
     return true;
 #endif /* ECB_EXTRA_CHECKS */
@@ -183,7 +188,6 @@ ECB_VOID_BOOL_T ecbuff_read(ecbuff* const restrict rb, void* const restrict elem
 {
     assert(rb);
     assert(element);
-    FULL_MEMORY_BARRIER();
     ECB_UINT_T rp = rb->rp;
 #if defined(ECB_ASSERT) || defined(ECB_EXTRA_CHECKS)
     ECB_UINT_T wp = rb->wp;
@@ -196,11 +200,10 @@ ECB_VOID_BOOL_T ecbuff_read(ecbuff* const restrict rb, void* const restrict elem
 #endif
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
-
+    FENCE_ACQUIRE();
     ECB_MEMCPY(element, &rb->elems[rp], element_size);
-    FULL_MEMORY_BARRIER();
+    FENCE_RELEASE();
     rb->rp = ECB_MODULUS((rp + element_size), total_size);
-    FULL_MEMORY_BARRIER();
 #if defined(ECB_EXTRA_CHECKS)
     return true;
 #endif
@@ -209,7 +212,6 @@ ECB_VOID_BOOL_T ecbuff_read(ecbuff* const restrict rb, void* const restrict elem
 ECB_UINT_T ecbuff_used(const ecbuff* const restrict rb)
 {
     assert(rb);
-    FULL_MEMORY_BARRIER();
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T rp = rb->rp;
@@ -221,7 +223,6 @@ ECB_UINT_T ecbuff_used(const ecbuff* const restrict rb)
 ECB_UINT_T ecbuff_unused(const ecbuff* const restrict rb)
 {
     assert(rb);
-    FULL_MEMORY_BARRIER();
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T rp = rb->rp;
@@ -236,20 +237,19 @@ ECB_VOLATILE_T void* ecbuff_write_alloc(ecbuff* const restrict rb)
     assert(rb);
     ECB_UINT_T wp = rb->wp;
 #if defined(ECB_ASSERT) && !defined(ECB_WRITE_OVERWRITE) && !defined(ECB_WRITE_DROP)
-    FULL_MEMORY_BARRIER();
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T rp = rb->rp;
     assert(!ecbuff_is_full_private(total_size, element_size, rp, wp));
 #endif
-
+    FENCE_ACQUIRE();
     return &rb->elems[wp];
 }
 
 ECB_VOID_BOOL_T ecbuff_write_enqueue(ecbuff* const restrict rb)
 {
     assert(rb);
-    FULL_MEMORY_BARRIER();
+    FENCE_RELEASE();
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T wp = rb->wp;
@@ -276,7 +276,6 @@ ECB_VOID_BOOL_T ecbuff_write_enqueue(ecbuff* const restrict rb)
 #endif /* ECB_EXTRA_CHECKS */
     }
 #endif /* ECB_WRITE_OVERWRITE */
-    FULL_MEMORY_BARRIER();
 #if defined(ECB_EXTRA_CHECKS)
     return true;
 #endif
@@ -285,7 +284,6 @@ ECB_VOID_BOOL_T ecbuff_write_enqueue(ecbuff* const restrict rb)
 ECB_VOLATILE_T void* ecbuff_read_dequeue(ecbuff* const restrict rb)
 {
     assert(rb);
-    FULL_MEMORY_BARRIER();
     ECB_UINT_T rp = rb->rp;
 #if defined(ECB_ASSERT) || defined(ECB_EXTRA_CHECKS)
     ECB_UINT_T wp = rb->wp;
@@ -296,13 +294,14 @@ ECB_VOLATILE_T void* ecbuff_read_dequeue(ecbuff* const restrict rb)
         return NULL;
 #endif
 #endif
+    FENCE_ACQUIRE();
     return &rb->elems[rp];
 }
 
 ECB_VOID_BOOL_T ecbuff_read_free(ecbuff* const restrict rb)
 {
     assert(rb);
-    FULL_MEMORY_BARRIER();
+    FENCE_RELEASE();
     ECB_UINT_T rp = rb->rp;
 #if defined(ECB_ASSERT) || defined(ECB_EXTRA_CHECKS)
     ECB_UINT_T wp = rb->wp;
@@ -317,7 +316,6 @@ ECB_VOID_BOOL_T ecbuff_read_free(ecbuff* const restrict rb)
     ECB_UINT_T element_size = rb->element_size;
 
     rb->rp = ECB_MODULUS((rp + element_size), total_size);
-    FULL_MEMORY_BARRIER();
 #if defined(ECB_EXTRA_CHECKS)
     return true;
 #endif
