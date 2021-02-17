@@ -16,6 +16,12 @@
  */
 #define ECB_ASSERT
 
+/* ASSERT(x)
+ * Optional : specify custom assert() implementation. Otherwise fallback to <assert.h>.
+ * Ignored if ECB_ASSERT not defined.
+ */
+//#define ASSERT(x) assert_custom(x)
+
 /* ECB_ELEM_ALIGN
  * Additional assertions to check whether buffer meets alignment of ECB_ELEM_ALIGN.
  */

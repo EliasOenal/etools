@@ -5,9 +5,16 @@
 #if defined(ECB_ASSERT)
 #include <assert.h>
 #include <limits.h>
+
+#if !defined(ASSERT)
+//use standard assert() if nothing custom was defined
+#define ASSERT(x) assert(x)
+#endif
+
 #else
 #define NDEBUG
-#define assert(x)
+#undef ASSERT	//ignore earlier definition from ecbuff_cfg.h
+#define ASSERT(x)
 #endif
 
 #if defined(ECB_WRITE_DROP)
@@ -16,7 +23,7 @@
 
 /* Turn static assertions into runtime checks on older compilers */
 #if !defined(static_assert)
-#define static_assert(x, y) assert(x)
+#define static_assert(x, y) ASSERT(x)
 #endif
 
 /* Verify configuration */
@@ -79,16 +86,16 @@ void ecbuff_init(ecbuff* const restrict rb, const ECB_UINT_T total_size, const E
     /* Check type limits */
     static_assert(ECB_UINT_MAX >= ECB_ATOMIC_MAX, "ECB_UINT_MAX is required to at least be ECB_ATOMIC_MAX");
     /* Sanity-check parameters */
-    assert(total_size <= ECB_ATOMIC_MAX);
-    assert(total_size);
-    assert(element_size);
-    assert(ECB_MODULUS(total_size, element_size) == 0);
-    assert(total_size >= element_size * 2);
-    assert(rb);
+    ASSERT(total_size <= ECB_ATOMIC_MAX);
+    ASSERT(total_size);
+    ASSERT(element_size);
+    ASSERT(ECB_MODULUS(total_size, element_size) == 0);
+    ASSERT(total_size >= element_size * 2);
+    ASSERT(rb);
 #if defined(ECB_ELEM_ALIGN)
-    assert(ECB_CHECK_ALIGN(element_size, ECB_ELEM_ALIGN));
-    assert(ECB_CHECK_ALIGN(&rb->elems[0], ECB_ELEM_ALIGN));
-    assert(ECB_CHECK_ALIGN(&rb->elems[0] + element_size, ECB_ELEM_ALIGN));
+    ASSERT(ECB_CHECK_ALIGN(element_size, ECB_ELEM_ALIGN));
+    ASSERT(ECB_CHECK_ALIGN(&rb->elems[0], ECB_ELEM_ALIGN));
+    ASSERT(ECB_CHECK_ALIGN(&rb->elems[0] + element_size, ECB_ELEM_ALIGN));
 #endif
     rb->total_size = total_size;
     rb->element_size = element_size;
@@ -99,14 +106,14 @@ void ecbuff_init(ecbuff* const restrict rb, const ECB_UINT_T total_size, const E
 static inline bool ecbuff_is_full_private(const ECB_UINT_T total_size, const ECB_UINT_T element_size,
                                             const ECB_UINT_T rp, const ECB_UINT_T wp)
 {
-    assert(total_size);
-    assert(element_size);
+    ASSERT(total_size);
+    ASSERT(element_size);
     return ECB_MODULUS((wp + element_size), total_size) == rp;
 }
 
 bool ecbuff_is_full(const ecbuff* const restrict rb)
 {
-    assert(rb);
+    ASSERT(rb);
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T rp = rb->rp;
@@ -122,7 +129,7 @@ static inline bool ecbuff_is_empty_private(const ECB_UINT_T rp, const ECB_UINT_T
 
 bool ecbuff_is_empty(const ecbuff* const restrict rb)
 {
-    assert(rb);
+    ASSERT(rb);
     ECB_UINT_T rp = rb->rp;
     ECB_UINT_T wp = rb->wp;
     return ecbuff_is_empty_private(rp, wp);
@@ -142,8 +149,8 @@ static inline void ecbuff_vmemcpy(volatile void* restrict dest, volatile const v
 
 ECB_VOID_BOOL_T ecbuff_write(ecbuff* const restrict rb, const void* const restrict element)
 {
-    assert(rb);
-    assert(element);
+    ASSERT(rb);
+    ASSERT(element);
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T wp = rb->wp;
@@ -161,7 +168,7 @@ ECB_VOID_BOOL_T ecbuff_write(ecbuff* const restrict rb, const void* const restri
 #endif
 
 #if !defined(ECB_WRITE_OVERWRITE)
-    assert(!ecbuff_is_full_private(total_size, element_size, rp, wp));
+    ASSERT(!ecbuff_is_full_private(total_size, element_size, rp, wp));
 #endif /* ECB_WRITE_OVERWRITE */
     FENCE_ACQUIRE();
     ECB_MEMCPY(&rb->elems[wp], element, element_size);
@@ -186,13 +193,13 @@ ECB_VOID_BOOL_T ecbuff_write(ecbuff* const restrict rb, const void* const restri
 
 ECB_VOID_BOOL_T ecbuff_read(ecbuff* const restrict rb, void* const restrict element)
 {
-    assert(rb);
-    assert(element);
+    ASSERT(rb);
+    ASSERT(element);
     ECB_UINT_T rp = rb->rp;
 #if defined(ECB_ASSERT) || defined(ECB_EXTRA_CHECKS)
     ECB_UINT_T wp = rb->wp;
 #if defined(ECB_ASSERT) && !defined(ECB_EXTRA_CHECKS)
-    assert(!ecbuff_is_empty_private(rp, wp));
+    ASSERT(!ecbuff_is_empty_private(rp, wp));
 #elif defined(ECB_EXTRA_CHECKS)
     if(ecbuff_is_empty_private(rp, wp))
         return false;
@@ -211,7 +218,7 @@ ECB_VOID_BOOL_T ecbuff_read(ecbuff* const restrict rb, void* const restrict elem
 
 ECB_UINT_T ecbuff_used(const ecbuff* const restrict rb)
 {
-    assert(rb);
+    ASSERT(rb);
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T rp = rb->rp;
@@ -222,7 +229,7 @@ ECB_UINT_T ecbuff_used(const ecbuff* const restrict rb)
 
 ECB_UINT_T ecbuff_unused(const ecbuff* const restrict rb)
 {
-    assert(rb);
+    ASSERT(rb);
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T rp = rb->rp;
@@ -234,13 +241,13 @@ ECB_UINT_T ecbuff_unused(const ecbuff* const restrict rb)
 #ifdef ECB_DIRECT_ACCESS
 ECB_VOLATILE_T void* ecbuff_write_alloc(ecbuff* const restrict rb)
 {
-    assert(rb);
+    ASSERT(rb);
     ECB_UINT_T wp = rb->wp;
 #if defined(ECB_ASSERT) && !defined(ECB_WRITE_OVERWRITE) && !defined(ECB_WRITE_DROP)
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
     ECB_UINT_T rp = rb->rp;
-    assert(!ecbuff_is_full_private(total_size, element_size, rp, wp));
+    ASSERT(!ecbuff_is_full_private(total_size, element_size, rp, wp));
 #endif
     FENCE_ACQUIRE();
     return &rb->elems[wp];
@@ -248,7 +255,7 @@ ECB_VOLATILE_T void* ecbuff_write_alloc(ecbuff* const restrict rb)
 
 ECB_VOID_BOOL_T ecbuff_write_enqueue(ecbuff* const restrict rb)
 {
-    assert(rb);
+    ASSERT(rb);
     FENCE_RELEASE();
     ECB_UINT_T total_size = rb->total_size;
     ECB_UINT_T element_size = rb->element_size;
@@ -283,12 +290,12 @@ ECB_VOID_BOOL_T ecbuff_write_enqueue(ecbuff* const restrict rb)
 
 ECB_VOLATILE_T void* ecbuff_read_dequeue(ecbuff* const restrict rb)
 {
-    assert(rb);
+    ASSERT(rb);
     ECB_UINT_T rp = rb->rp;
 #if defined(ECB_ASSERT) || defined(ECB_EXTRA_CHECKS)
     ECB_UINT_T wp = rb->wp;
 #if defined(ECB_ASSERT) && !defined(ECB_EXTRA_CHECKS)
-    assert(!ecbuff_is_empty_private(rp, wp));
+    ASSERT(!ecbuff_is_empty_private(rp, wp));
 #elif defined(ECB_EXTRA_CHECKS)
     if(ecbuff_is_empty_private(rp, wp))
         return NULL;
@@ -300,13 +307,13 @@ ECB_VOLATILE_T void* ecbuff_read_dequeue(ecbuff* const restrict rb)
 
 ECB_VOID_BOOL_T ecbuff_read_free(ecbuff* const restrict rb)
 {
-    assert(rb);
+    ASSERT(rb);
     FENCE_RELEASE();
     ECB_UINT_T rp = rb->rp;
 #if defined(ECB_ASSERT) || defined(ECB_EXTRA_CHECKS)
     ECB_UINT_T wp = rb->wp;
 #if defined(ECB_ASSERT) && !defined(ECB_EXTRA_CHECKS)
-    assert(!ecbuff_is_empty_private(rp, wp));
+    ASSERT(!ecbuff_is_empty_private(rp, wp));
 #elif defined(ECB_EXTRA_CHECKS)
     if(ecbuff_is_empty_private(rp, wp))
         return false;
