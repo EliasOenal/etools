@@ -55,7 +55,7 @@ ECB_UINT_T ecbuff_unused(const ecbuff* const restrict rb);
 ECB_UINT_T ecbuff_used(const ecbuff* const restrict rb);
 
 /* ecbuff_clear
- * Resets the buffer
+ * Clears the buffer
  */
 void ecbuff_clear(ecbuff* const restrict rb);
 
