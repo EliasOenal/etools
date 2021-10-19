@@ -240,8 +240,8 @@ ECB_UINT_T ecbuff_unused(const ecbuff* const restrict rb)
 
 void ecbuff_clear(ecbuff* const restrict rb)
 {
-    rb->rp = 0;
-    rb->wp = 0;
+    // Set the read and write pointers to point at each other.
+    rb->rp = rb->wp;
 }
 
 #ifdef ECB_DIRECT_ACCESS
