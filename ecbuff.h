@@ -54,10 +54,10 @@ ECB_VOID_BOOL_T ecbuff_read(ecbuff* const restrict rb, void* const restrict elem
 ECB_UINT_T ecbuff_unused(const ecbuff* const restrict rb);
 ECB_UINT_T ecbuff_used(const ecbuff* const restrict rb);
 
-/* ecbuff_reset
+/* ecbuff_clear
  * Resets the buffer
  */
-void ecbuff_reset(ecbuff* const restrict rb);
+void ecbuff_clear(ecbuff* const restrict rb);
 
 #ifdef ECB_DIRECT_ACCESS
 ECB_VOLATILE_T void* ecbuff_write_alloc(ecbuff* const restrict rb);
