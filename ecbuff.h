@@ -54,6 +54,15 @@ ECB_VOID_BOOL_T ecbuff_read(ecbuff* const restrict rb, void* const restrict elem
 ECB_UINT_T ecbuff_unused(const ecbuff* const restrict rb);
 ECB_UINT_T ecbuff_used(const ecbuff* const restrict rb);
 
+/*
+ * Clear/reset the buffer
+ * This function should be invoked only from the consumer/reader thread.
+ * Theoretically it clears the buffer but functionally the read and write pointers
+ * are set to point at each other. Therefore the buffer is not actually cleared
+ * but the existing data in the buffer is just discarded without completely reading it.
+ */
+void ecbuff_read_discard(ecbuff* const restrict rb);
+
 #ifdef ECB_DIRECT_ACCESS
 ECB_VOLATILE_T void* ecbuff_write_alloc(ecbuff* const restrict rb);
 ECB_VOID_BOOL_T ecbuff_write_enqueue(ecbuff* const restrict rb);

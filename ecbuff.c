@@ -238,6 +238,13 @@ ECB_UINT_T ecbuff_unused(const ecbuff* const restrict rb)
     return ECB_MODULUS((total_size - element_size + rp - wp), total_size) / element_size;
 }
 
+/* Please read the description before using it. */
+void ecbuff_read_discard(ecbuff* const restrict rb)
+{
+    ASSERT(rb);
+    rb->rp = rb->wp;
+}
+
 #ifdef ECB_DIRECT_ACCESS
 ECB_VOLATILE_T void* ecbuff_write_alloc(ecbuff* const restrict rb)
 {
